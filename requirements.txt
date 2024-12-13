@@ -48,7 +48,7 @@ numpy==1.19.5
 numpy-quaternion==2022.4.2
 oauthlib==3.2.1
 opt-einsum==3.3.0
-packaging==21.3
+packaging==22.0
 pandas==1.4.4
 patchelf==0.15.0.0
 pathtools==0.1.2

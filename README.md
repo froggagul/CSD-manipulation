@@ -14,6 +14,7 @@ Please visit [our project page](https://seohong.me/projects/csd/) for videos.
 conda create --name csd-manipulation python=3.8
 conda activate csd-manipulation
 pip install -r requirements.txt
+pip install -e gym
 export LD_LIBRARY_PATH=$HOME/.mujoco/mujoco210/bin:/usr/lib/nvidia
 ```
 
