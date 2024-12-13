@@ -74,7 +74,7 @@ class FetchEnv(robot_env.RobotEnv):
 
         pos_ctrl *= 0.05  # limit maximum change in position
         grip_rot_mat = self.sim.data.get_site_xmat('robot0:grip')
-        rot_ctrl_mat = rotations.euler2mat(0.5*rot_ctrl)
+        rot_ctrl_mat = rotations.euler2mat(0.25*rot_ctrl)
         rot_ctrl = rotations.mat2quat(np.dot(grip_rot_mat, rot_ctrl_mat))
         gripper_ctrl = np.array([gripper_ctrl, gripper_ctrl])
         assert gripper_ctrl.shape == (2,)
