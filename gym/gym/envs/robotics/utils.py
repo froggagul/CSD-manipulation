@@ -94,3 +94,39 @@ def reset_mocap2body_xpos(sim):
         assert (mocap_id != -1)
         sim.data.mocap_pos[mocap_id][:] = sim.data.body_xpos[body_idx]
         sim.data.mocap_quat[mocap_id][:] = sim.data.body_xquat[body_idx]
+
+def compute_min_distance_multiple_points(points, box_center, box_dimensions, rotation_matrix):
+    """
+    Compute the minimum distances between multiple points and an oriented box in 3D space.
+
+    Parameters:
+    - points: (N, 3) array_like, the points coordinates in world space.
+    - box_center: (3,) array_like, the center of the box in world space.
+    - box_dimensions: (3,) array_like, the dimensions of the box (width, height, depth).
+    - rotation_matrix: (3, 3) array_like, the rotation matrix defining the box's orientation.
+
+    Returns:
+    - distances: (N,) ndarray, the minimum distances between each point and the box.
+    - closest_points: (N, 3) ndarray, the closest points on the box to each given point.
+    """
+    points = np.asarray(points)  # Shape: (N, 3)
+    box_center = np.asarray(box_center)
+    box_dimensions = np.asarray(box_dimensions)
+    rotation_matrix = np.asarray(rotation_matrix)
+
+    # Translate points to box's local coordinate system
+    translated_points = points - box_center  # Shape: (N, 3)
+    points_local = translated_points @ rotation_matrix  # Inverse rotation
+
+    # Clamp points within the box's local bounds
+    half_dimensions = box_dimensions / 2
+    clamped_local = np.maximum(-half_dimensions, np.minimum(points_local, half_dimensions))  # Shape: (N, 3)
+
+    # Transform clamped points back to world coordinates
+    closest_points = clamped_local @ rotation_matrix.T + box_center  # Shape: (N, 3)
+
+    # Compute Euclidean distances
+    distance_vectors = points - closest_points  # Shape: (N, 3)
+    distances = np.linalg.norm(distance_vectors, axis=1)  # Shape: (N,)
+
+    return distances, closest_points

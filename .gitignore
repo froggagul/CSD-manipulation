@@ -12,3 +12,4 @@ baselines/__pycache__
 venv/
 wandb
 ipynbs
+.vscode

@@ -105,7 +105,7 @@ def prepare_params(kwargs):
             env = KitchenMicrowaveKettleLightTopLeftBurnerV0Custom(control_mode='end_effector')
             env = TimeLimit(env, max_episode_steps=kwargs['max_path_length'])
         else:
-            env = gym.make(env_name)
+            env = gym.make(env_name, reward_type='contact')
             if 'max_path_length' in kwargs:
                 env = env.env
                 from gym.wrappers.time_limit import TimeLimit

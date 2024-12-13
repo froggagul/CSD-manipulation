@@ -350,11 +350,11 @@ def train(
 def launch(
         run_group, env_name, n_epochs, train_start_epoch, num_cpu, seed, replay_strategy, policy_save_interval, clip_return, binding, logging,
         num_skills, version, n_cycles, note, skill_type, plot_freq, plot_repeats, n_random_trajectories,
-        sk_r_scale, et_r_scale, sk_clip, et_clip, done_ground,
+        r_scale, sk_r_scale, et_r_scale, sk_clip, et_clip, done_ground,
         max_path_length, hidden, layers, rollout_batch_size, n_batches, polyak, spectral_normalization,
         dual_reg, dual_init_lambda, dual_lam_opt, dual_slack, dual_dist,
         inner, algo, random_eps, noise_eps, lr, sk_lam_lr, buffer_size, algo_name,
-        load_weight, override_params={}, save_policies=True,
+        load_weight, override_params={}, save_policies=True, reward_type='sparse'
 ):
     tf.compat.v1.disable_eager_execution()
 
@@ -385,6 +385,7 @@ def launch(
         logdir += '_sn' + str(spectral_normalization)
         logdir += '_dr' + str(dual_reg)
         logdir += '_in' + str(inner)
+        logdir += '_r' + str(r_scale)
         logdir += '_sk' + str(sk_r_scale)
         logdir += '_et' + str(et_r_scale)
     else:
@@ -426,6 +427,8 @@ def launch(
     params['plot_freq'] = plot_freq
     params['plot_repeats'] = plot_repeats
     params['n_random_trajectories'] = n_random_trajectories
+    if r_scale is not None:
+        params['r_scale'] = r_scale
     if sk_r_scale is not None:
         params['sk_r_scale'] = sk_r_scale
     if et_r_scale is not None:
@@ -454,6 +457,7 @@ def launch(
     params['buffer_size'] = buffer_size
     params['algo_name'] = algo_name
     params['train_start_epoch'] = train_start_epoch
+    params['reward_type'] = reward_type
 
     if load_weight is not None:
         params['load_weight'] = load_weight
@@ -493,7 +497,7 @@ def launch(
             max_episode_steps = max_path_length
             env = TimeLimit(env, max_episode_steps=max_episode_steps)
         else:
-            env = gym.make(env_name)
+            env = gym.make(env_name, reward_type=params["reward_type"])
             if 'max_path_length' in params:
                 env = env.env
                 from gym.wrappers.time_limit import TimeLimit
@@ -573,6 +577,7 @@ def launch(
 @click.option('--plot_freq', type=int, default=1)
 @click.option('--plot_repeats', type=int, default=1)
 @click.option('--n_random_trajectories', type=int, default=200)
+@click.option('--r_scale', type=float, default=None)
 @click.option('--sk_r_scale', type=float, default=None)
 @click.option('--et_r_scale', type=float, default=None)
 @click.option('--sk_clip', type=int, default=1)
@@ -599,6 +604,7 @@ def launch(
 @click.option('--buffer_size', type=int, default=1000000)
 @click.option('--algo_name', type=str, default=None)  # Only for logging, not used
 @click.option('--load_weight', type=str, default=None)
+@click.option('--reward_type', type=str, default='sparse')
 def main(**kwargs):
     launch(**kwargs)
 

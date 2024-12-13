@@ -53,8 +53,24 @@ class FetchEnv(robot_env.RobotEnv):
     def compute_reward(self, achieved_goal, goal, info):
         # Compute distance between goal and the achieved goal.
         d = goal_distance(achieved_goal, goal)
+
+        rf_pos = self.sim.data.get_body_xpos('robot0:r_gripper_finger_link')
+        lf_pos = self.sim.data.get_body_xpos('robot0:l_gripper_finger_link')
+        points = np.array([rf_pos, lf_pos])
+
+        object_pos = self.sim.data.get_site_xpos('object0')
+        object_rot = self.sim.data.get_site_xmat('object0')
+
+        object_dim = 2*self.sim.model.geom_size[self.sim.model.geom_name2id('object0')]
+
+        d_c, closest_points = utils.compute_min_distance_multiple_points(
+            points, object_pos, object_dim, object_rot
+        )
+
         if self.reward_type == 'sparse':
             return -(d > self.distance_threshold).astype(np.float32)
+        elif self.reward_type == 'contact':
+            return -d_c.mean().astype(np.float32)
         else:
             return -d
 
