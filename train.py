@@ -168,7 +168,7 @@ def iod_eval(eval_dir, env_name, evaluator, video_evaluator, num_skills, skill_t
             if 'Kitchen' in env_name:
                 target_coords = [23, 24, 25]
             else:
-                target_coords = [3, 4, 5]
+                target_coords = [6, 7, 8]
             ach_coords = rollouts['o'][:, :, [target_coords[0], target_coords[1]]]
             xz_coords = rollouts['o'][:, :, [target_coords[0], target_coords[2]]]
             yz_coords = rollouts['o'][:, :, [target_coords[1], target_coords[2]]]
