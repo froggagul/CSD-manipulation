@@ -54,6 +54,35 @@ Test MUSIC FetchPickAndPlace
 export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so
 python baselines/her/experiment/play.py /path/to/an/experiment/policy_latest.pkl --note SAC+MUSIC --render human
 ```
+
+## downstream task
+
+environment install
+```
+python3.10 -m venv venv
+source venv/bin/activate
+pip install -r requirements-torch.txt
+```
+
+convert
+```
+conda activate csd-manipulation
+python convert_tf_to_np.py --path logs/Exp/sd000_1733995173_FetchPush-v1_ns2_sn0_dr1_in1_sk500.0_et0.02/policy_500.pkl
+
+```
+
+```
+source venv/bin/activate
+python convert_tf_to_np.py --path logs/Exp/sd000_1733995173_FetchPush-v1_ns2_sn0_dr1_in1_sk500.0_et0.02/policy_500.pkl
+```
+
+adaption
+```
+source venv/bin/activate
+python train_controller_torch.py --path logs/Exp/sd000_1733995173_FetchPush-v1_ns2_sn0_dr1_in1_sk500.0_et0.02/torch_policy.pth
+```
+
+
 ## Licence
 
 MIT
