@@ -11,13 +11,18 @@ import torch.nn as nn
 from torch import Tensor
 from stable_baselines3.common.vec_env import VecVideoRecorder
 import argparse
+import os
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument('--path', type=str, default=None)
+# TODO - add scratch argument
 
 # Create the FetchPickAndPlace-v1 environment
 env_id = "FetchPickAndPlace-v1"
 skill_policy_path = argparser.parse_args().path
+logdir = os.path.dirname(skill_policy_path)
+video_folder = os.path.join(logdir, "videos")
+best_model_save_path = os.path.join(logdir, "best_model")
 
 checkpoint = torch.load(skill_policy_path)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -131,6 +136,7 @@ class CustomActor(Actor):
         )
         self.skill_conditioned_actor = SkillConditionedActor(
             input_dim = odim + gdim + skilldim,
+            output_dim = actiondim,
         )
 
     def get_action_dist_params(self, obs):
@@ -159,9 +165,9 @@ class CustomCritic(ContinuousCritic):
         # Define additional layers or override layers if needed
         # for i in range(1, len(self.q_networks)):
             # self.q_networks[i] = # custom
-        breakpoint()
         self.skill_generator = SkillGenerator(
             input_dim = odim + gdim,
+            output_dim = skilldim,
         )
         self.q_networks = nn.ModuleList([
             SkillConditionedCritic(
@@ -180,10 +186,10 @@ class CustomPolicy(MultiInputPolicy):
     def make_actor(self, features_extractor=None) -> CustomActor:
         actor_kwargs = self._update_features_extractor(self.actor_kwargs, features_extractor)
         actor = CustomActor(**actor_kwargs)
-        actor.skill_conditioned_actor.load_state_dict(checkpoint["actor"])
+        # actor.skill_conditioned_actor.load_state_dict(checkpoint["actor"])
         # freeze the skill conditioned policy
-        for param in actor.skill_conditioned_actor.parameters():
-            param.requires_grad = False
+        # for param in actor.skill_conditioned_actor.parameters():
+        #     param.requires_grad = False
 
         return actor.to(self.device)
 
@@ -198,7 +204,7 @@ class CustomPolicy(MultiInputPolicy):
 
 # Vectorized environment (supports parallel processing)
 env = make_vec_env(
-    gym.make(env_id),
+    env_id,
     n_envs=1
 )
 
@@ -221,12 +227,11 @@ model = SAC(**sac_config)
 
 # Create evaluation environment
 eval_env = make_vec_env(env_id, n_envs=1)
-def record_video_trigger(step):
-    return step % 2000 == 0
+
 eval_env = VecVideoRecorder(
     eval_env,
-    video_folder="logs/videos_eval/",
-    record_video_trigger=record_video_trigger,
+    video_folder=video_folder,
+    record_video_trigger=lambda x: x % 2000 == 0,
     video_length=200,     # how many steps to record per evaluation episode
     name_prefix="eval_video"
 )
@@ -234,8 +239,8 @@ eval_env = VecVideoRecorder(
 # Callback for evaluation during training
 eval_callback = EvalCallback(
     eval_env,
-    best_model_save_path="./logs/best_model/",
-    log_path="./logs/",
+    best_model_save_path=best_model_save_path,
+    log_path=logdir,
     eval_freq=5000,
     deterministic=True,
     render=False,

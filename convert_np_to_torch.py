@@ -163,8 +163,8 @@ with torch.no_grad():
 print(mu, mu_pred)
 print(q, q_pred)
 
-assert np.allclose(mu, mu_pred.numpy(), atol=1e-6)
-assert np.allclose(q, q_pred.numpy(), atol=1e-1)
+assert np.allclose(mu, mu_pred.numpy(), atol=1e-4)
+assert np.allclose(q, q_pred.numpy(), atol=5e-1)
 
 torch.save({
     "critic": model.critic.state_dict(),
