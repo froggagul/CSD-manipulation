@@ -168,7 +168,10 @@ def iod_eval(eval_dir, env_name, evaluator, video_evaluator, num_skills, skill_t
             if 'Kitchen' in env_name:
                 target_coords = [23, 24, 25]
             else:
-                target_coords = [6, 7, 8]
+                if rollouts['o'].shape[-1] == 25:
+                    target_coords = [3, 4, 5]
+                elif rollouts['o'].shape[-1] == 28:
+                    target_coords = [6, 7, 8]
             ach_coords = rollouts['o'][:, :, [target_coords[0], target_coords[1]]]
             xz_coords = rollouts['o'][:, :, [target_coords[0], target_coords[2]]]
             yz_coords = rollouts['o'][:, :, [target_coords[1], target_coords[2]]]
@@ -354,7 +357,7 @@ def launch(
         max_path_length, hidden, layers, rollout_batch_size, n_batches, polyak, spectral_normalization,
         dual_reg, dual_init_lambda, dual_lam_opt, dual_slack, dual_dist,
         inner, algo, random_eps, noise_eps, lr, sk_lam_lr, buffer_size, algo_name,
-        load_weight, override_params={}, save_policies=True, reward_type='sparse'
+        load_weight, override_params={}, save_policies=True, reward_type='sparse', action_type='pos',
 ):
     tf.compat.v1.disable_eager_execution()
 
@@ -458,6 +461,7 @@ def launch(
     params['algo_name'] = algo_name
     params['train_start_epoch'] = train_start_epoch
     params['reward_type'] = reward_type
+    params['action_type'] = action_type
 
     if load_weight is not None:
         params['load_weight'] = load_weight
@@ -497,7 +501,7 @@ def launch(
             max_episode_steps = max_path_length
             env = TimeLimit(env, max_episode_steps=max_episode_steps)
         else:
-            env = gym.make(env_name, reward_type=params["reward_type"])
+            env = gym.make(env_name, reward_type=params["reward_type"], action_type=params["action_type"])
             if 'max_path_length' in params:
                 env = env.env
                 from gym.wrappers.time_limit import TimeLimit
@@ -605,6 +609,7 @@ def launch(
 @click.option('--algo_name', type=str, default=None)  # Only for logging, not used
 @click.option('--load_weight', type=str, default=None)
 @click.option('--reward_type', type=str, default='sparse')
+@click.option('--action_type', type=click.Choice(['pos', 'posrot']), default='pos')
 def main(**kwargs):
     launch(**kwargs)
 
